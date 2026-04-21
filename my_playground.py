@@ -25,6 +25,7 @@ ball = {
 }
 
 def make_players():
+    """Create the initial 4v4 formation and control-key mapping for each player."""
     return [
         {'x': FIELD_RIGHT - 31,  'y': FIELD_MID_Y,       'team': 'R', 'key': ''},
         {'x': FIELD_RIGHT - 187, 'y': FIELD_MID_Y + 75,  'team': 'R', 'key': '7'},
@@ -88,6 +89,7 @@ def draw_text_large(x, y, text):
     draw_text(x, y, text, GLUT_BITMAP_TIMES_ROMAN_24)
 
 def draw_field():
+    """Render the pitch background, sidelines, center line, and penalty boxes."""
     glColor3f(0.12, 0.58, 0.12)
     draw_rect(0, 0, W, H)
     glColor3f(0.10, 0.52, 0.10)
@@ -128,6 +130,7 @@ def draw_field():
     glEnd()
 
 def draw_goalposts():
+    """Draw both goals with simple net lines."""
     gb, gt = GOAL_MID_Y - GOAL_HEIGHT // 2, GOAL_MID_Y + GOAL_HEIGHT // 2
     for x, w in [(GOAL_A_X, -GOAL_WIDTH), (GOAL_B_X, GOAL_WIDTH)]:
         glColor3f(1.0, 1.0, 1.0); glLineWidth(4.0)
@@ -139,6 +142,7 @@ def draw_goalposts():
             glBegin(GL_LINES); glVertex2f(x+w, ny); glVertex2f(x, ny); glEnd()
 
 def draw_players():
+    """Draw all players and highlight the currently selected red/blue players."""
     for i, p in enumerate(players):
         is_red_active  = (i == active_red_index)
         is_blue_active = (i == active_blue_index)
@@ -191,19 +195,20 @@ def draw_ball():
         draw_circle(px, py, br * 0.25, filled=True)
 
 def draw_hud():
+    """Render score, match timer, controls, and active-player indicators."""
     # Top bar
     glColor3f(0.08, 0.08, 0.08)
     draw_rect(0, H - 45, W, 45)
 
-    glColor3f(0.85, 0.20, 0.20)
-    draw_text(20, H - 28, "RED TEAM", GLUT_BITMAP_HELVETICA_18)
+    glColor3f(0.30, 0.55, 1.00)
+    draw_text(20, H - 28, "BLUE TEAM", GLUT_BITMAP_HELVETICA_18)
 
     glColor3f(1.0, 1.0, 1.0)
-    score_str = f"{score_b}  :  {score_a}"
+    score_str = f"{score_a}  :  {score_b}"
     draw_text(W//2 - 35, H - 28, score_str, GLUT_BITMAP_TIMES_ROMAN_24)
 
-    glColor3f(0.30, 0.55, 1.00)
-    draw_text(W - 135, H - 28, "BLUE TEAM", GLUT_BITMAP_HELVETICA_18)
+    glColor3f(0.85, 0.20, 0.20)
+    draw_text(W - 120, H - 28, "RED TEAM", GLUT_BITMAP_HELVETICA_18)
 
     # Bottom bar
     glColor3f(0.12, 0.12, 0.12)
@@ -289,8 +294,7 @@ def draw_game_over():
     draw_text(W//2 - 75, H//2 - 65, "Press  R  to play again", GLUT_BITMAP_HELVETICA_18)
 
 def update_goalkeepers():
-    """Bounce GKs up/down inside the goal bar automatically
-    at a constant speed."""
+    """Auto-move both goalkeepers within goal bounds and handle ball deflections."""
     for slot, idx in enumerate([GK_RED_IDX, GK_BLUE_IDX]):
         p = players[idx]
         spd = GK_BASE_SPEED
@@ -310,6 +314,7 @@ def update_goalkeepers():
         check_player_ball_collision(p, 0, spd * gk_dir[slot])
 
 def reset_positions():
+    """Reset ball and player positions after kickoff or a goal."""
     global players, active_red_index, active_blue_index
     ball['x']  = float(FIELD_MID_X)
     ball['y']  = float(FIELD_MID_Y)
@@ -320,6 +325,7 @@ def reset_positions():
     active_blue_index = None
 
 def reset_game():
+    """Reset full match state (score, timer, overlays, and positions)."""
     global score_a, score_b, game_time, game_over, paused
     global goal_flash_timer, goal_flash_team
     score_a = 0; score_b = 0
@@ -342,6 +348,7 @@ def _apply_movement(p, dx, dy):
         check_player_ball_collision(p, dx, dy)
 
 def update_movements():
+    """Apply user input to the currently selected players for each team."""
     if active_red_index is not None:
         dx = (GLUT_KEY_RIGHT in special_keys_held) - (GLUT_KEY_LEFT in special_keys_held)
         dy = (GLUT_KEY_UP in special_keys_held) - (GLUT_KEY_DOWN in special_keys_held)
@@ -352,6 +359,7 @@ def update_movements():
         _apply_movement(players[active_blue_index], dx * PLAYER_SPEED, dy * PLAYER_SPEED)
 
 def check_player_ball_collision(p, pdx, pdy):
+    """Kick the ball away when a player overlaps it, based on movement direction/speed."""
     bx, by = ball['x'], ball['y']
     dist = math.hypot(bx - p['x'], by - p['y'])
     touch_dist = PLAYER_R + ball['r']
@@ -377,6 +385,7 @@ def check_player_ball_collision(p, pdx, pdy):
         ball['y'] = by + ny * overlap
 
 def update_ball():
+    """Advance ball physics: movement, friction, and wall bounces."""
     ball['x'] += ball['vx']
     ball['y'] += ball['vy']
 
@@ -407,6 +416,7 @@ def update_ball():
         ball['vy'] = -abs(ball['vy']) * 0.7
 
 def check_goal():
+    """Detect goals, update score/flash state, and reset for kickoff."""
     global score_a, score_b, goal_flash_timer, goal_flash_team
     bx, by, br = ball['x'], ball['y'], ball['r']
     gy_bot = GOAL_MID_Y - GOAL_HEIGHT // 2
@@ -428,6 +438,7 @@ def check_goal():
         reset_positions()
 
 def display():
+    """Main render callback for drawing one full game frame."""
     glClear(GL_COLOR_BUFFER_BIT)
     glLoadIdentity()
 
@@ -444,6 +455,7 @@ def display():
     glutSwapBuffers()
 
 def update(value):
+    """Timer callback: step simulation, update match clock, and request redraw."""
     global game_time, game_over, last_tick
 
     if not paused and not game_over:
@@ -467,6 +479,7 @@ def update(value):
     glutTimerFunc(16, update, 0)
 
 def keyboard_down(key, x, y):
+    """Handle key press events (selection, pause, restart, and quit)."""
     global paused, game_over, active_red_index, active_blue_index
     keys_held.add(key)
 
@@ -498,6 +511,7 @@ def special_up(key, x, y):
     special_keys_held.discard(key)
 
 def init():
+    """Initialize OpenGL clear color and 2D orthographic projection."""
     glClearColor(0.0, 0.0, 0.0, 1.0)
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
