@@ -1,0 +1,69 @@
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
+
+
+angleZ = 0.0
+stepZ = 5.0
+
+
+def draw_quad():
+    glColor3f(0.4, 0.7, 1.0)  # Sky Blue
+    glBegin(GL_QUADS)
+    glVertex2f(-100, -100)  # Bottom Left
+    glVertex2f( 100, -100)  # Bottom Right
+    glVertex2f( 100,  100)  # Top Right
+    glVertex2f(-100,  100)  # Top Left
+    glEnd()
+
+
+def display():
+    glClear(GL_COLOR_BUFFER_BIT)
+    glLoadIdentity()
+
+
+    glRotatef(angleZ, 0, 0, 1)  
+
+    draw_quad()
+    glutSwapBuffers()
+
+
+def keyboard(key, x, y):
+    global angleZ
+
+
+    if key == b'Z': angleZ += stepZ
+    
+
+
+    glutPostRedisplay()
+
+
+def init():
+    glClearColor(0.0, 0.0, 0.0, 1.0)
+    glViewport(0, 0, 500, 500)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(-250, 250, -250, 250, -1, 1)  # Origin is now CENTER of window
+    glMatrixMode(GL_MODELVIEW)
+
+
+glutInit()
+glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB)
+glutInitWindowSize(500, 500)
+glutInitWindowPosition(100, 100)
+glutCreateWindow(b"Example 1 - Rotate 2D Quad")
+
+
+init()
+
+
+glutDisplayFunc(display)
+glutKeyboardFunc(keyboard)
+
+
+print("Press Z to rotate clockwise")
+
+
+glutMainLoop()
+
